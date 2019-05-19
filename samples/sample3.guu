@@ -1,0 +1,7 @@
+sub foo
+    set a 2
+
+sub main
+    set a 1
+    call foo
+    print a
