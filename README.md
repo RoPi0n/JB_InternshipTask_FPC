@@ -5,3 +5,6 @@
 2. Open project (guu_dbg.lpi).
 3. Compile it.
 4. Be happy.
+
+# Or u can use guu_dbg.exe
+It compiled specially for u, dear user :)
