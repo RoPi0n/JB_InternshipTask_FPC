@@ -1,0 +1,6 @@
+sub main
+    set x 10
+    call bar
+	
+sub foo
+    print x
