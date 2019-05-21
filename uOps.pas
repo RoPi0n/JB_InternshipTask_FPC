@@ -20,7 +20,6 @@ type
     public
       OpType         : TGuuToken;
       OpArgs         : TStringList;
-      OpLevel        : Word;
       OpLine         : Cardinal;
       OpUnChangedLine: string;
       NextOp         : TGuuOp;
@@ -30,6 +29,9 @@ type
       destructor  Destroy; override;
   end;
 
+const
+  STACK_SIZE = 2048;
+
 implementation
 
 constructor TGuuOp.Create(LineNum: Cardinal; Line:string);
@@ -38,12 +40,12 @@ constructor TGuuOp.Create(LineNum: Cardinal; Line:string);
  *)
 var
   s: string;
+  w: word;
 begin
   inherited Create;
   OpArgs := TStringList.Create;
   OpLine := LineNum;
   OpUnChangedLine := Line;
-  OpLevel := CountLevel(Line);
 
   NextOp    := nil;
   OpReg     := nil;
@@ -71,6 +73,17 @@ begin
     opSet  : begin // set <var> <value>
                OpArgs.Add(GetToken(Line, 2));
                OpArgs.Add(GetToken(Line, 3));
+               w := 1;
+               while w < Length(OpArgs[1]) + 1 do
+                begin
+                  if not (OpArgs[1][w] in ['0'..'9']) then
+                   begin
+                     writeln('[Syntax error]: Invalid variable assigment "', Line, '" at line ', OpLine, '.');
+                     halt;
+                   end;
+                  inc(w);
+                end;
+
                if (Length(OpArgs[0]) = 0) or (Length(OpArgs[1]) = 0) or
                   (Length(GetToken(Line, 4)) > 0) then
                 begin
@@ -152,7 +165,7 @@ begin
                  Op := TGuuOp(OpReg);
                  CBSize := CallBacks.Count;
 
-                 while (Op <> nil) or (CallBacks.Count > CBSize) do
+                 while ((Op <> nil) or (CallBacks.Count > CBSize)) and (Trace.Count < STACK_SIZE) do
                   begin
                     if Op = nil then
                      begin
@@ -181,4 +194,3 @@ begin
 end;
 
 end.
-

@@ -70,7 +70,7 @@ procedure CheckSemantic;
  * Semantic analyse and calls optimisation.
  *)
 var
-  c, x, SubLvl: cardinal;
+  c, x: cardinal;
   op: TGuuOp;
 begin
   if GuuOps.Count > 0 then
@@ -85,17 +85,10 @@ begin
      while c < GuuOps.Count do
       begin
         case TGuuOp(GuuOps[c]).OpType of
-          opSub: SubLvl := TGuuOp(GuuOps[c]).OpLevel;
+          opSub:;
 
           opCall: begin
-                    if TGuuOp(GuuOps[c]).OpLevel > SubLvl then
-                     TGuuOp(GuuOps[c - 1]).NextOp := TGuuOp(GuuOps[c])
-                    else
-                     begin
-                       writeln('[Error]: Operation outside sub at line ', TGuuOp(GuuOps[c]).OpLine, '.');
-                       halt;
-                     end;
-
+                    TGuuOp(GuuOps[c - 1]).NextOp := TGuuOp(GuuOps[c]);
                     x := 0;
                     op := nil;
                     while x < GuuOps.Count do
@@ -120,14 +113,7 @@ begin
                  end;
 
           opPrint: begin
-                     if TGuuOp(GuuOps[c]).OpLevel > SubLvl then
-                      TGuuOp(GuuOps[c - 1]).NextOp := TGuuOp(GuuOps[c])
-                     else
-                      begin
-                        writeln('[Error]: Operation outside sub at line ', TGuuOp(GuuOps[c]).OpLine, '.');
-                        halt;
-                      end;
-
+                     TGuuOp(GuuOps[c - 1]).NextOp := TGuuOp(GuuOps[c]);
                      x := 0;
                      while x < GuuVars.Count do
                       begin
@@ -145,18 +131,9 @@ begin
                                 '" for print doesn''t exist at line ', TGuuOp(GuuOps[c]).OpLine, '.');
                       end;
                    end;
-
           else
-           begin
-             if TGuuOp(GuuOps[c]).OpLevel > SubLvl then
-              TGuuOp(GuuOps[c - 1]).NextOp := TGuuOp(GuuOps[c])
-             else
-              begin
-                writeln('[Error]: Operation outside sub at line ', TGuuOp(GuuOps[c]).OpLine, '.');
-                halt;
-              end;
-           end;
-          end;
+            TGuuOp(GuuOps[c - 1]).NextOp := TGuuOp(GuuOps[c]);
+        end;
         inc(c);
       end;
    end;
@@ -197,7 +174,7 @@ begin
       c := 0;
       while c < code.Count do
        begin
-         ParseNext(c + 1, code[c]);
+         ParseNext(c + 1, Trim(code[c]));
          inc(c);
        end;
 
@@ -245,9 +222,9 @@ begin
                  '* x     - exit.', sLineBreak);
 
          // Execution loop
-         while (CurrentOp <> nil) or (CallBacks.Count > 0) do
+         while ((CurrentOp <> nil) or (CallBacks.Count > 0)) and (Trace.Count < STACK_SIZE) do
           begin
-            write('Now we at line "', CurrentOp.OpLine, '" enter cmd: ');
+            write('Line ', CurrentOp.OpLine, ' ~> ');
             readln(cmd);
 
             // Execute commands
@@ -297,7 +274,7 @@ begin
          // Only run mode (/run)
          FreeAndNil(code);
 
-         while (CurrentOp <> nil) or (CallBacks.Count > 0) do
+         while ((CurrentOp <> nil) or (CallBacks.Count > 0)) and (Trace.Count < STACK_SIZE) do
           begin
             CurrentOp := CurrentOp.Step(false, CallBacks, Trace);
             if (CurrentOp = nil) and (CallBacks.Count > 0) then
@@ -308,6 +285,9 @@ begin
              end;
           end;
        end;
+
+      if Trace.Count >= STACK_SIZE then
+       writeln('[Runtime error]: Stack overflow!');
 
       FreeAndNil(CallBacks);
       FreeAndNil(Trace);
@@ -321,4 +301,3 @@ begin
       ' /run - Run Guu code.'
     );
 end.
-

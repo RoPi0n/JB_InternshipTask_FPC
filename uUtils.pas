@@ -8,7 +8,6 @@ uses
   Classes, SysUtils, Crt;
 
   function FillSpaces(s: string; destLen: byte): string;
-  function CountLevel(s: string): word;
   function GetToken(s: string; tokenNum: word): string;
 
 implementation
@@ -18,16 +17,6 @@ begin
   while Length(s) < destLen do
    s := s + ' ';
   Result := s;
-end;
-
-function CountLevel(s: string): word;
-begin
-  Result := 0;
-  while copy(s, 1, 1) = ' ' do
-   begin
-     Delete(s, 1, 1);
-     Inc(Result);
-   end;
 end;
 
 function GetToken(s: string; tokenNum: word): string;
@@ -58,4 +47,3 @@ begin
 end;
 
 end.
-

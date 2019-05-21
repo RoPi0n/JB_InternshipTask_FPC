@@ -1,0 +1,6 @@
+sub main
+    set x 1f
+    call foo
+	
+sub foo
+    print x
